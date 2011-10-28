@@ -1257,3 +1257,11 @@ on_sort_by_custom_activate             (GtkMenuItem     *menuitem,
     gtk_widget_destroy (dlg);
     dlg = NULL;
 }
+
+void
+on_toggle_artwork                      (GtkMenuItem     *menuitem,
+                                        gpointer         user_data)
+{
+
+}
+
