@@ -129,6 +129,8 @@ create_mainwin (void)
   GtkWidget *tabstrip;
   GtkWidget *hbox104;
   GtkWidget *vbox36;
+  GtkWidget *aspectframe1;
+  GtkWidget *alignment25;
   GtkWidget *img_art;
   GtkWidget *frame1;
   GtkWidget *playlist;
@@ -610,9 +612,19 @@ create_mainwin (void)
   gtk_widget_show (vbox36);
   gtk_box_pack_start (GTK_BOX (hbox104), vbox36, TRUE, TRUE, 0);
 
+  aspectframe1 = gtk_aspect_frame_new (NULL, 0.5, 0.5, 1, TRUE);
+  gtk_widget_show (aspectframe1);
+  gtk_box_pack_start (GTK_BOX (vbox36), aspectframe1, TRUE, TRUE, 0);
+  gtk_frame_set_shadow_type (GTK_FRAME (aspectframe1), GTK_SHADOW_NONE);
+
+  alignment25 = gtk_alignment_new (0.5, 0.5, 1, 1);
+  gtk_widget_show (alignment25);
+  gtk_container_add (GTK_CONTAINER (aspectframe1), alignment25);
+  gtk_alignment_set_padding (GTK_ALIGNMENT (alignment25), 0, 0, 12, 0);
+
   img_art = gtk_image_new_from_icon_name ("gtk-stop", GTK_ICON_SIZE_BUTTON);
   gtk_widget_show (img_art);
-  gtk_box_pack_start (GTK_BOX (vbox36), img_art, TRUE, TRUE, 0);
+  gtk_container_add (GTK_CONTAINER (alignment25), img_art);
 
   frame1 = gtk_frame_new (NULL);
   gtk_widget_show (frame1);
@@ -907,6 +919,8 @@ create_mainwin (void)
   GLADE_HOOKUP_OBJECT (mainwin, tabstrip, "tabstrip");
   GLADE_HOOKUP_OBJECT (mainwin, hbox104, "hbox104");
   GLADE_HOOKUP_OBJECT (mainwin, vbox36, "vbox36");
+  GLADE_HOOKUP_OBJECT (mainwin, aspectframe1, "aspectframe1");
+  GLADE_HOOKUP_OBJECT (mainwin, alignment25, "alignment25");
   GLADE_HOOKUP_OBJECT (mainwin, img_art, "img_art");
   GLADE_HOOKUP_OBJECT (mainwin, frame1, "frame1");
   GLADE_HOOKUP_OBJECT (mainwin, playlist, "playlist");
