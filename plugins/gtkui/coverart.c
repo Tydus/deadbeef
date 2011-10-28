@@ -26,6 +26,8 @@
 #include "../artwork/artwork.h"
 #include "gtkui.h"
 
+static GtkWidget *artworkcont;
+
 //#define trace(...) { fprintf(stderr, __VA_ARGS__); }
 #define trace(...)
 
@@ -307,5 +309,20 @@ cover_art_free (void) {
     memset (cache, 0, sizeof (cache));
     deadbeef->cond_free (cond);
     deadbeef->mutex_free (mutex);
+}
+
+void
+artwork_window_show (void) {
+    if (!artworkcont)
+        artworkcont = lookup_widget (mainwin, "img_art");
+    gtk_widget_show (artworkcont);
+
+}
+
+void
+artwork_window_hide (void) {
+    if (!artworkcont)
+        artworkcont = lookup_widget (mainwin, "img_art");
+    gtk_widget_hide (artworkcont);
 }
 

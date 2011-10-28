@@ -1291,6 +1291,21 @@ gtkui_connect_cb (void *none) {
             break;
         }
     }
+
+    GtkWidget *artwork_mi = lookup_widget (mainwin, "view_artwork");
+    if(!coverart_plugin){
+        gtk_widget_hide (GTK_WIDGET (artwork_mi));
+    }
+    else {
+        if (deadbeef->conf_get_int ("gtkui.artwork.visible", 0)) {
+            gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (artwork_mi), TRUE);
+            artwork_window_show ();
+        }
+        else {
+            gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (artwork_mi), FALSE);
+        }
+    }
+
     gtkui_playlist_changed ();
     return FALSE;
 }

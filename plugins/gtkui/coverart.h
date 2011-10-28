@@ -41,5 +41,11 @@ cover_art_init (void);
 void
 cover_art_free (void);
 
+void
+artwork_window_show (void);
+
+void
+artwork_window_hide (void);
+
 #endif
 
