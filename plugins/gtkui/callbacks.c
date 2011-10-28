@@ -946,6 +946,21 @@ on_toggle_eq                           (GtkMenuItem     *menuitem,
     deadbeef->conf_save ();
 }
 
+void
+on_toggle_artwork                       (GtkMenuItem     *menuitem,
+                                        gpointer         user_data)
+{
+    if (!gtk_check_menu_item_get_active (GTK_CHECK_MENU_ITEM (menuitem))) {
+        deadbeef->conf_set_int ("gtkui.artwork.visible", 0);
+        artwork_window_hide ();
+    }
+    else {
+        deadbeef->conf_set_int ("gtkui.artwork.visible", 1);
+        artwork_window_show ();
+    }
+    deadbeef->conf_save ();
+}
+
 
 
 void
