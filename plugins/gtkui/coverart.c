@@ -24,6 +24,7 @@
 #include <sys/stat.h>
 #include "coverart.h"
 #include "../artwork/artwork.h"
+#include "support.h"
 #include "gtkui.h"
 
 static GtkWidget *artworkcont;

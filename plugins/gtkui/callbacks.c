@@ -43,6 +43,7 @@
 #include "parser.h"
 #include "drawing.h"
 #include "eq.h"
+#include "coverart.h"
 #include "wingeom.h"
 
 //#define trace(...) { fprintf (stderr, __VA_ARGS__); }
@@ -1271,12 +1272,5 @@ on_sort_by_custom_activate             (GtkMenuItem     *menuitem,
 
     gtk_widget_destroy (dlg);
     dlg = NULL;
-}
-
-void
-on_toggle_artwork                      (GtkMenuItem     *menuitem,
-                                        gpointer         user_data)
-{
-
 }
 
