@@ -158,6 +158,7 @@ void main_selection_changed (DdbListviewIter it, int idx) {
     }
     else {
         ddb_listview_draw_row (search, search_get_idx ((DB_playItem_t *)it), it);
+        artwork_window_update ((DB_playItem_t *)it);
     }
 }
 

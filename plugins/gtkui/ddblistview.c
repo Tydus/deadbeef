@@ -1363,6 +1363,7 @@ ddb_listview_select_single (DdbListview *ps, int sel) {
     deadbeef->pl_unlock ();
 
     ddb_listview_refresh (ps, DDB_REFRESH_LIST);
+    ps->binding->selection_changed (sel_it, sel);
     ps->binding->selection_changed (NULL, -1); // that means "selection changed a lot, redraw everything"
     ps->area_selection_start = sel;
     ps->area_selection_end = sel;

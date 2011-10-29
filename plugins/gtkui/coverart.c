@@ -37,6 +37,10 @@ extern DB_artwork_plugin_t *coverart_plugin;
 #define MAX_ID 256
 #define CACHE_SIZE 20
 
+// The Newest item, ie. 
+DB_playItem_t curr_plitem;
+uintptr_t curr_plitem_lock=0;
+
 typedef struct {
     struct timeval tm;
     char *fname;
@@ -101,8 +105,16 @@ queue_pop (void) {
 
 gboolean
 redraw_playlist_cb (gpointer dt) {
+    trace ("covercache: redraw_playlist\n");
     void main_refresh (void);
     main_refresh ();
+
+    /*deadbeef->mutex_lock(curr_plitem_lock);
+    //if (!strcmp (fname, curr_plitem))
+        // We need to refresh the artwork control
+    artwork_window_update (&curr_plitem);
+    deadbeef->mutex_unlock(curr_plitem_lock);*/
+
     return FALSE;
 }
 
@@ -244,10 +256,12 @@ get_cover_art (const char *fname, const char *artist, const char *album, int wid
     if (!coverart_plugin) {
         return NULL;
     }
+
     char *image_fname = coverart_plugin->get_album_art (fname, artist, album, -1, cover_avail_callback, (void *)(intptr_t)width);
     if (image_fname) {
         GdkPixbuf *pb = get_pixbuf (image_fname, width);
         free (image_fname);
+        trace("pb=%p\n",pb);
         return pb;
     }
     return NULL;
@@ -327,3 +341,42 @@ artwork_window_hide (void) {
     gtk_widget_hide (artworkcont);
 }
 
+void
+artwork_window_callback (const char *fname, const char *artist, const char *album, void *user_data) {
+    char *image_fname = coverart_plugin->get_album_art (fname, artist, album, -1, artwork_window_callback, NULL);
+    gtk_image_set_from_file (GTK_IMAGE (artworkcont), image_fname);
+}
+
+void
+artwork_window_update (DB_playItem_t *it) {
+    if (!artworkcont)
+        artworkcont = lookup_widget (mainwin, "img_art");
+
+    // FIXME width dummy here, Don't set below 400!
+    int art_width=400;
+    const char *album = deadbeef->pl_find_meta (it, "album");
+    const char *artist = deadbeef->pl_find_meta (it, "artist");
+    if (!album || !*album) {
+        album = deadbeef->pl_find_meta (it, "title");
+    }
+
+    // Set the item to Newest one to the artwork control
+    if(!curr_plitem_lock)
+        curr_plitem_lock=deadbeef->mutex_create();
+    deadbeef->mutex_lock(curr_plitem_lock);
+    memcpy(&curr_plitem,it,sizeof(DB_playItem_t));
+    deadbeef->mutex_unlock(curr_plitem_lock);
+
+    const char *fname = deadbeef->pl_find_meta (it, ":URI");
+    GdkPixbuf *pixbuf;
+
+
+    if (!coverart_plugin) {
+        return;
+    }
+    char *image_fname = coverart_plugin->get_album_art (fname, artist, album, -1, artwork_window_callback, NULL);
+    if (image_fname) {
+        gtk_image_set_from_file (GTK_IMAGE (artworkcont), image_fname);
+    }
+
+}

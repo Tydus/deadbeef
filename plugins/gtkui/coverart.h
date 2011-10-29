@@ -47,5 +47,11 @@ artwork_window_show (void);
 void
 artwork_window_hide (void);
 
+void
+artwork_window_update (DB_playItem_t *it);
+
+void
+artwork_window_refresh (GdkPixbuf *pixbuf);
+
 #endif
 
