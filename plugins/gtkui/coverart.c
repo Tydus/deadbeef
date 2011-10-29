@@ -37,10 +37,6 @@ extern DB_artwork_plugin_t *coverart_plugin;
 #define MAX_ID 256
 #define CACHE_SIZE 20
 
-// The Newest item, ie. 
-DB_playItem_t curr_plitem;
-uintptr_t curr_plitem_lock=0;
-
 typedef struct {
     struct timeval tm;
     char *fname;
@@ -108,12 +104,6 @@ redraw_playlist_cb (gpointer dt) {
     trace ("covercache: redraw_playlist\n");
     void main_refresh (void);
     main_refresh ();
-
-    /*deadbeef->mutex_lock(curr_plitem_lock);
-    //if (!strcmp (fname, curr_plitem))
-        // We need to refresh the artwork control
-    artwork_window_update (&curr_plitem);
-    deadbeef->mutex_unlock(curr_plitem_lock);*/
 
     return FALSE;
 }
@@ -352,24 +342,14 @@ artwork_window_update (DB_playItem_t *it) {
     if (!artworkcont)
         artworkcont = lookup_widget (mainwin, "img_art");
 
-    // FIXME width dummy here, Don't set below 400!
-    int art_width=400;
     const char *album = deadbeef->pl_find_meta (it, "album");
     const char *artist = deadbeef->pl_find_meta (it, "artist");
     if (!album || !*album) {
         album = deadbeef->pl_find_meta (it, "title");
     }
 
-    // Set the item to Newest one to the artwork control
-    if(!curr_plitem_lock)
-        curr_plitem_lock=deadbeef->mutex_create();
-    deadbeef->mutex_lock(curr_plitem_lock);
-    memcpy(&curr_plitem,it,sizeof(DB_playItem_t));
-    deadbeef->mutex_unlock(curr_plitem_lock);
-
     const char *fname = deadbeef->pl_find_meta (it, ":URI");
     GdkPixbuf *pixbuf;
-
 
     if (!coverart_plugin) {
         return;
