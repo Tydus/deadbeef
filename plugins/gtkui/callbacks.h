@@ -1163,3 +1163,13 @@ on_convert8to16_toggled                (GtkToggleButton *togglebutton,
 void
 on_toggle_artwork                      (GtkMenuItem     *menuitem,
                                         gpointer         user_data);
+
+void
+on_hpaned2_size_request                (GtkWidget       *widget,
+                                        GtkRequisition  *requisition,
+                                        gpointer         user_data);
+
+void
+on_vpaned1_size_request                (GtkWidget       *widget,
+                                        GtkRequisition  *requisition,
+                                        gpointer         user_data);

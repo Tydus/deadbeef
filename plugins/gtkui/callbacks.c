@@ -1274,3 +1274,21 @@ on_sort_by_custom_activate             (GtkMenuItem     *menuitem,
     dlg = NULL;
 }
 
+
+void
+on_hpaned2_size_request                (GtkWidget       *widget,
+                                        GtkRequisition  *requisition,
+                                        gpointer         user_data)
+{
+
+}
+
+
+void
+on_vpaned1_size_request                (GtkWidget       *widget,
+                                        GtkRequisition  *requisition,
+                                        gpointer         user_data)
+{
+
+}
+
