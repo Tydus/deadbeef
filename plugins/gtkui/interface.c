@@ -127,8 +127,8 @@ create_mainwin (void)
   GtkWidget *seekbar;
   GtkWidget *volumebar;
   GtkWidget *tabstrip;
-  GtkWidget *hbox104;
-  GtkWidget *vbox36;
+  GtkWidget *hpaned2;
+  GtkWidget *vpaned1;
   GtkWidget *img_art;
   GtkWidget *frame1;
   GtkWidget *playlist;
@@ -602,21 +602,23 @@ create_mainwin (void)
   GTK_WIDGET_UNSET_FLAGS (tabstrip, GTK_CAN_FOCUS);
   GTK_WIDGET_UNSET_FLAGS (tabstrip, GTK_CAN_DEFAULT);
 
-  hbox104 = gtk_hbox_new (FALSE, 0);
-  gtk_widget_show (hbox104);
-  gtk_box_pack_start (GTK_BOX (vbox1), hbox104, TRUE, TRUE, 0);
+  hpaned2 = gtk_hpaned_new ();
+  gtk_widget_show (hpaned2);
+  gtk_box_pack_start (GTK_BOX (vbox1), hpaned2, TRUE, TRUE, 0);
+  gtk_paned_set_position (GTK_PANED (hpaned2), 0);
 
-  vbox36 = gtk_vbox_new (FALSE, 0);
-  gtk_widget_show (vbox36);
-  gtk_box_pack_start (GTK_BOX (hbox104), vbox36, TRUE, TRUE, 0);
+  vpaned1 = gtk_vpaned_new ();
+  gtk_widget_show (vpaned1);
+  gtk_paned_pack1 (GTK_PANED (hpaned2), vpaned1, FALSE, TRUE);
+  gtk_paned_set_position (GTK_PANED (vpaned1), 0);
 
   img_art = gtk_image_new_from_icon_name ("gtk-stop", GTK_ICON_SIZE_BUTTON);
   gtk_widget_show (img_art);
-  gtk_box_pack_start (GTK_BOX (vbox36), img_art, TRUE, TRUE, 0);
+  gtk_paned_pack2 (GTK_PANED (vpaned1), img_art, TRUE, TRUE);
 
   frame1 = gtk_frame_new (NULL);
   gtk_widget_show (frame1);
-  gtk_box_pack_start (GTK_BOX (hbox104), frame1, TRUE, TRUE, 0);
+  gtk_paned_pack2 (GTK_PANED (hpaned2), frame1, TRUE, TRUE);
   gtk_container_set_border_width (GTK_CONTAINER (frame1), 1);
 
   playlist = create_ddb_listview_widget ("playlist", "", "", 0, 0);
@@ -905,8 +907,8 @@ create_mainwin (void)
   GLADE_HOOKUP_OBJECT (mainwin, seekbar, "seekbar");
   GLADE_HOOKUP_OBJECT (mainwin, volumebar, "volumebar");
   GLADE_HOOKUP_OBJECT (mainwin, tabstrip, "tabstrip");
-  GLADE_HOOKUP_OBJECT (mainwin, hbox104, "hbox104");
-  GLADE_HOOKUP_OBJECT (mainwin, vbox36, "vbox36");
+  GLADE_HOOKUP_OBJECT (mainwin, hpaned2, "hpaned2");
+  GLADE_HOOKUP_OBJECT (mainwin, vpaned1, "vpaned1");
   GLADE_HOOKUP_OBJECT (mainwin, img_art, "img_art");
   GLADE_HOOKUP_OBJECT (mainwin, frame1, "frame1");
   GLADE_HOOKUP_OBJECT (mainwin, playlist, "playlist");
