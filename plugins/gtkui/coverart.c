@@ -397,7 +397,7 @@ artwork_window_refresh () {
 
     GtkAllocation *al=&(artworkcont->allocation);
 
-    if (al->width<5 || al->height<5)
+    if (al->width<16 || al->height<16 )
         return;
 
     int width_orig  = gdk_pixbuf_get_width (artworkcont_pixbuf);
