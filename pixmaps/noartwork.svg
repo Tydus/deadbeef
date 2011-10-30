@@ -10,11 +10,11 @@
    xmlns:xlink="http://www.w3.org/1999/xlink"
    xmlns:sodipodi="http://sodipodi.sourceforge.net/DTD/sodipodi-0.dtd"
    xmlns:inkscape="http://www.inkscape.org/namespaces/inkscape"
-   width="744.09448819"
-   height="1052.3622047"
+   width="155.71428"
+   height="155.71428"
    id="svg2"
    version="1.1"
-   inkscape:version="0.47 r22583"
+   inkscape:version="0.48.1 r9760"
    sodipodi:docname="noartwork.svg">
   <defs
      id="defs4">
@@ -48,7 +48,8 @@
        gradientUnits="userSpaceOnUse" />
     <filter
        inkscape:collect="always"
-       id="filter3681">
+       id="filter3681"
+       color-interpolation-filters="sRGB">
       <feGaussianBlur
          inkscape:collect="always"
          stdDeviation="0.53393832"
@@ -63,16 +64,20 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1.979899"
-     inkscape:cx="21.281669"
-     inkscape:cy="959.06103"
+     inkscape:cx="122.37742"
+     inkscape:cy="63.857972"
      inkscape:document-units="px"
      inkscape:current-layer="layer1"
      showgrid="false"
-     inkscape:window-width="1440"
-     inkscape:window-height="822"
-     inkscape:window-x="-1"
-     inkscape:window-y="52"
-     inkscape:window-maximized="1" />
+     inkscape:window-width="1680"
+     inkscape:window-height="1020"
+     inkscape:window-x="1366"
+     inkscape:window-y="0"
+     inkscape:window-maximized="1"
+     fit-margin-top="0"
+     fit-margin-left="0"
+     fit-margin-right="0"
+     fit-margin-bottom="0" />
   <metadata
      id="metadata7">
     <rdf:RDF>
@@ -81,16 +86,17 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
   <g
      inkscape:label="Layer 1"
      inkscape:groupmode="layer"
-     id="layer1">
+     id="layer1"
+     transform="translate(-22.142857,-21.647896)">
     <rect
-       style="fill:url(#linearGradient3596);stroke:none;stroke-width:7.69999980999999867;stroke-miterlimit:4;stroke-opacity:1;stroke-dasharray:none;fill-opacity:1;"
+       style="fill:url(#linearGradient3596);fill-opacity:1;stroke:none"
        id="rect2816"
        width="155.71428"
        height="155.71428"
@@ -99,19 +105,13 @@
        inkscape:export-filename="/home/waker/prj/deadbeef/pixmaps/noartwork.png"
        inkscape:export-xdpi="115.6"
        inkscape:export-ydpi="115.6" />
-    <text
-       xml:space="preserve"
-       style="font-size:181.57003783999999769px;font-style:normal;font-weight:normal;fill:#14202e;fill-opacity:1;stroke:none;font-family:Bitstream Vera Sans;filter:url(#filter3681)"
-       x="49.990486"
-       y="165.96898"
-       id="text3616"
-       inkscape:export-filename="/home/waker/prj/deadbeef/pixmaps/noartwork.png"
-       inkscape:export-xdpi="115.6"
-       inkscape:export-ydpi="115.6"><tspan
-         sodipodi:role="line"
-         id="tspan3618"
-         x="49.990486"
-         y="165.96898"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:DejaVu Serif;-inkscape-font-specification:DejaVu Serif;fill:#14202e;fill-opacity:1">?</tspan></text>
+    <g
+       style="font-size:181.57003784px;font-style:normal;font-weight:normal;fill:#14202e;fill-opacity:1;stroke:none;filter:url(#filter3681);font-family:Bitstream Vera Sans"
+       id="text3616">
+      <path
+         d="m 81.907094,156.74863 c -3.2e-5,-3.30986 1.122959,-6.11734 3.368976,-8.42244 2.30505,-2.30507 5.142079,-3.45761 8.511095,-3.45764 3.250719,3e-5 6.028643,1.15257 8.333785,3.45764 2.30503,2.3051 3.45757,5.11258 3.45763,8.42244 -6e-5,3.25077 -1.1526,6.02869 -3.45763,8.33378 -2.305142,2.30508 -5.083066,3.45763 -8.333785,3.45763 -3.369016,0 -6.206045,-1.12299 -8.511095,-3.36898 -2.246017,-2.30508 -3.369008,-5.11256 -3.368976,-8.42243 M 62.313843,39.45509 c 6.265094,-2.777798 12.205123,-4.846464 17.820106,-6.206007 5.674028,-1.359277 10.993458,-2.038982 15.958305,-2.039117 13.121216,1.35e-4 23.464546,3.16224 31.030036,9.486326 7.62444,6.324335 11.4367,14.864975 11.43678,25.621943 -8e-5,10.993587 -3.2804,19.977513 -9.84095,26.951803 -6.5016,6.974432 -16.34255,11.968792 -29.522863,14.983072 l 0,22.51894 -10.904841,0 0,-29.07957 c 10.461506,-2.541445 18.322444,-6.796988 23.582824,-12.766647 5.31937,-5.969505 7.97909,-13.564468 7.97916,-22.784912 -7e-5,-8.097254 -2.1574,-14.480569 -6.47198,-19.149965 -4.31472,-4.669158 -10.19564,-7.003796 -17.642795,-7.003922 -6.73799,1.26e-4 -12.264286,1.950583 -16.578905,5.851378 -4.255573,3.84193 -7.003945,9.397779 -8.245124,16.667562 l -8.599753,0 0,-23.050884"
+         style="font-variant:normal;font-stretch:normal;fill:#14202e;font-family:DejaVu Serif;-inkscape-font-specification:DejaVu Serif"
+         id="path2993" />
+    </g>
   </g>
 </svg>
