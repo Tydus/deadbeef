@@ -1296,14 +1296,21 @@ gtkui_connect_cb (void *none) {
     GtkWidget *artwork_mi = lookup_widget (mainwin, "view_artwork");
     if(!coverart_plugin){
         gtk_widget_hide (GTK_WIDGET (artwork_mi));
+        artwork_window_hide ();
     }
     else {
         if (deadbeef->conf_get_int ("gtkui.artwork.visible", 0)) {
             gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (artwork_mi), TRUE);
             artwork_window_show ();
+            DdbListviewIter cursor = deadbeef->pl_get_for_idx_and_iter (
+                                        deadbeef->pl_get_cursor (PL_MAIN), PL_MAIN);
+            artwork_window_update ((DB_playItem_t *)cursor);
+            deadbeef->pl_item_unref (cursor);
+            artwork_window_refresh ();
         }
         else {
             gtk_check_menu_item_set_active (GTK_CHECK_MENU_ITEM (artwork_mi), FALSE);
+            artwork_window_hide ();
         }
     }
 
