@@ -158,8 +158,14 @@ void main_selection_changed (DdbListviewIter it, int idx) {
     }
     else {
         ddb_listview_draw_row (search, search_get_idx ((DB_playItem_t *)it), it);
-        artwork_window_update ((DB_playItem_t *)it);
     }
+
+    DdbListviewIter cursor = main_get_for_idx (main_get_cursor ());
+    trace ("cursor=%p\n",cursor);
+    if (cursor)
+        trace ("cursor on %s\n", deadbeef -> pl_find_meta (cursor, "album"));
+    artwork_window_update ((DB_playItem_t *)cursor);
+    deadbeef->pl_item_unref (cursor);
 }
 
 void main_draw_group_title (DdbListview *listview, cairo_t *drawable, DdbListviewIter it, int x, int y, int width, int height) {

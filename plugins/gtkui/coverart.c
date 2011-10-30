@@ -366,7 +366,6 @@ artwork_window_update (DB_playItem_t *it) {
     }
 
     const char *fname = deadbeef->pl_find_meta (it, ":URI");
-    GdkPixbuf *pixbuf;
 
     if (!coverart_plugin) {
         return;
