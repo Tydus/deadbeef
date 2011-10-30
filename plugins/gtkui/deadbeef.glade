@@ -957,13 +957,13 @@
 	<widget class="GtkHPaned" id="hpaned2">
 	  <property name="visible">True</property>
 	  <property name="can_focus">True</property>
-	  <signal name="size_request" handler="on_hpaned2_size_request" object="img_art" last_modification_time="Sat, 29 Oct 2011 15:52:18 GMT"/>
+	  <signal name="size_request" handler="on_hpaned2_size_request" last_modification_time="Sat, 29 Oct 2011 15:52:18 GMT"/>
 
 	  <child>
 	    <widget class="GtkVPaned" id="vpaned1">
 	      <property name="visible">True</property>
 	      <property name="can_focus">True</property>
-	      <signal name="size_request" handler="on_vpaned1_size_request" object="img_art" last_modification_time="Sat, 29 Oct 2011 15:51:47 GMT"/>
+	      <signal name="size_request" handler="on_vpaned1_size_request" last_modification_time="Sat, 29 Oct 2011 15:51:47 GMT"/>
 
 	      <child>
 		<placeholder/>
@@ -971,8 +971,6 @@
 
 	      <child>
 		<widget class="GtkImage" id="img_art">
-		  <property name="width_request">200</property>
-		  <property name="height_request">200</property>
 		  <property name="visible">True</property>
 		  <property name="icon_size">4</property>
 		  <property name="icon_name">gtk-stop</property>
