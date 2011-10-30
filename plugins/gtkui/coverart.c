@@ -368,6 +368,9 @@ artwork_window_update (DB_playItem_t *it) {
     if (!artworkcont)
         artworkcont = lookup_widget (mainwin, "img_art");
 
+    if (!it)
+        return;
+
     const char *album = deadbeef->pl_find_meta (it, "album");
     const char *artist = deadbeef->pl_find_meta (it, "artist");
     if (!album || !*album) {
@@ -376,9 +379,9 @@ artwork_window_update (DB_playItem_t *it) {
 
     const char *fname = deadbeef->pl_find_meta (it, ":URI");
 
-    if (!coverart_plugin) {
+    if (!coverart_plugin)
         return;
-    }
+
     if (coverart_plugin->get_album_art (fname, artist, album, -1, artwork_window_callback, NULL))
         artwork_window_callback (fname, artist, album, NULL);
 }

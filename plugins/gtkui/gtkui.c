@@ -1294,7 +1294,7 @@ gtkui_connect_cb (void *none) {
     }
 
     GtkWidget *artwork_mi = lookup_widget (mainwin, "view_artwork");
-    if(!coverart_plugin){
+    if (!coverart_plugin){
         gtk_widget_hide (GTK_WIDGET (artwork_mi));
         artwork_window_hide ();
     }
@@ -1304,8 +1304,11 @@ gtkui_connect_cb (void *none) {
             artwork_window_show ();
             DdbListviewIter cursor = deadbeef->pl_get_for_idx_and_iter (
                                         deadbeef->pl_get_cursor (PL_MAIN), PL_MAIN);
-            artwork_window_update ((DB_playItem_t *)cursor);
-            deadbeef->pl_item_unref (cursor);
+            if (cursor) {
+                artwork_window_update ((DB_playItem_t *)cursor);
+                deadbeef->pl_item_unref (cursor);
+            }
+
             artwork_window_refresh ();
         }
         else {
