@@ -1280,12 +1280,20 @@ on_hpaned2_size_request                (GtkWidget       *widget,
                                         GtkRequisition  *requisition,
                                         gpointer         user_data)
 {
+    if (!deadbeef->conf_get_int ("gtkui.artwork.visible", 0))
+        return;
+
     static gint oldsize=-1;
-    trace("name=%s\n",gtk_widget_get_name (widget));
+    trace ("name=%s\n", gtk_widget_get_name (widget));
     gint currsize=gtk_paned_get_position (GTK_PANED(widget));
     if (abs(oldsize-currsize)>5){
         artwork_window_refresh ();
+        trace ("currsize=%d\n", currsize);
         oldsize=currsize;
+        if (deadbeef->conf_get_int ("gtkui.artwork.visible", 0)){
+            deadbeef->conf_set_int ("gtkui.hpaned2.pos", currsize);
+            deadbeef->conf_save ();
+        }
     }
 }
 

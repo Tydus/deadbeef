@@ -324,7 +324,13 @@ artwork_window_show (void) {
     if (!artworkcont)
         artworkcont = lookup_widget (mainwin, "img_art");
     gtk_widget_show (artworkcont);
+    deadbeef->conf_set_int ("gtkui.artwork.visible", 1);
+    deadbeef->conf_save ();
 
+    gint pos = deadbeef->conf_get_int ("gtkui.hpaned2.pos", 100);
+    trace ("pos=%d\n",pos);
+
+    gtk_paned_set_position (GTK_PANED (lookup_widget (mainwin, "hpaned2")), pos);
 }
 
 void
@@ -332,6 +338,9 @@ artwork_window_hide (void) {
     if (!artworkcont)
         artworkcont = lookup_widget (mainwin, "img_art");
     gtk_widget_hide (artworkcont);
+    deadbeef->conf_set_int ("gtkui.artwork.visible", 0);
+    deadbeef->conf_save ();
+    gtk_paned_set_position (GTK_PANED (lookup_widget (mainwin, "hpaned2")),0);
 }
 
 void
