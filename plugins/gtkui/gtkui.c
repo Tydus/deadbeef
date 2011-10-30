@@ -868,6 +868,7 @@ songchanged (DdbListview *ps, DB_playItem_t *from, DB_playItem_t *to) {
     }
     if (to && to_idx != -1) {
         ddb_listview_draw_row (ps, to_idx, to);
+        artwork_window_update (to);
     }
 }
 
