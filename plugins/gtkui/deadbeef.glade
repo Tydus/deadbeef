@@ -957,7 +957,7 @@
 	<widget class="GtkHPaned" id="hpaned2">
 	  <property name="visible">True</property>
 	  <property name="can_focus">True</property>
-	  <signal name="size_request" handler="on_hpaned2_size_request" object="img_art" last_modification_time="Sat, 29 Oct 2011 15:52:18 GMT"/>
+	  <signal name="size_request" handler="on_hpaned2_size_request" object="hpaned2" last_modification_time="Sat, 29 Oct 2011 15:52:18 GMT"/>
 
 	  <child>
 	    <widget class="GtkVPaned" id="vpaned1">
@@ -982,8 +982,8 @@
 		  <property name="ypad">0</property>
 		</widget>
 		<packing>
-		  <property name="shrink">True</property>
-		  <property name="resize">True</property>
+		  <property name="shrink">False</property>
+		  <property name="resize">False</property>
 		</packing>
 	      </child>
 	    </widget>

@@ -612,7 +612,7 @@ create_mainwin (void)
 
   img_art = gtk_image_new_from_icon_name ("gtk-stop", GTK_ICON_SIZE_BUTTON);
   gtk_widget_show (img_art);
-  gtk_paned_pack2 (GTK_PANED (vpaned1), img_art, TRUE, TRUE);
+  gtk_paned_pack2 (GTK_PANED (vpaned1), img_art, FALSE, FALSE);
   gtk_widget_set_size_request (img_art, 200, 200);
 
   frame1 = gtk_frame_new (NULL);
@@ -810,7 +810,7 @@ create_mainwin (void)
                     NULL);
   g_signal_connect_swapped ((gpointer) hpaned2, "size_request",
                             G_CALLBACK (on_hpaned2_size_request),
-                            GTK_OBJECT (img_art));
+                            GTK_OBJECT (hpaned2));
   g_signal_connect_swapped ((gpointer) vpaned1, "size_request",
                             G_CALLBACK (on_vpaned1_size_request),
                             GTK_OBJECT (img_art));

@@ -17,6 +17,7 @@
     Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301, USA.
 */
 #include <gtk/gtk.h>
+#include <gdk-pixbuf/gdk-pixbuf.h>
 #include <sys/time.h>
 #include <string.h>
 #include <stdlib.h>
@@ -33,6 +34,8 @@ static GtkWidget *artworkcont;
 #define trace(...)
 
 extern DB_artwork_plugin_t *coverart_plugin;
+
+static GdkPixbuf *artworkcont_pixbuf;
 
 #define MAX_ID 256
 #define CACHE_SIZE 20
@@ -333,8 +336,22 @@ artwork_window_hide (void) {
 
 void
 artwork_window_callback (const char *fname, const char *artist, const char *album, void *user_data) {
+
     char *image_fname = coverart_plugin->get_album_art (fname, artist, album, -1, artwork_window_callback, NULL);
-    gtk_image_set_from_file (GTK_IMAGE (artworkcont), image_fname);
+
+    if (artworkcont_pixbuf)
+        gdk_pixbuf_unref (artworkcont_pixbuf);
+
+    GError *error = NULL;
+    artworkcont_pixbuf=gdk_pixbuf_new_from_file (image_fname, &error);
+    if (!artworkcont_pixbuf) {
+        fprintf (stderr, "gdk_pixbuf_new_from_file on %s failed, error: %s\n", fname, error->message);
+        return;
+    }
+    gdk_pixbuf_ref (artworkcont_pixbuf);
+
+    artwork_window_refresh ();
+
 }
 
 void
@@ -354,9 +371,45 @@ artwork_window_update (DB_playItem_t *it) {
     if (!coverart_plugin) {
         return;
     }
-    char *image_fname = coverart_plugin->get_album_art (fname, artist, album, -1, artwork_window_callback, NULL);
-    if (image_fname) {
-        gtk_image_set_from_file (GTK_IMAGE (artworkcont), image_fname);
-    }
+    if (coverart_plugin->get_album_art (fname, artist, album, -1, artwork_window_callback, NULL))
+        artwork_window_callback (fname, artist, album, NULL);
+}
+
+void
+artwork_window_refresh () {
+    trace ("gtkui/coverart.c:artwork_window_refresh\n");
+    if (!artworkcont)
+        artworkcont = lookup_widget (mainwin, "img_art");
+
+    if (!artworkcont_pixbuf)
+        return;
+
+    GtkAllocation *al=&(artworkcont->allocation);
+
+    if (al->width<5 || al->height<5)
+        return;
+
+    int width_orig  = gdk_pixbuf_get_width (artworkcont_pixbuf);
+    int height_orig = gdk_pixbuf_get_height (artworkcont_pixbuf);
+
+    /*
+    wn   hn
+    -- = --
+    wo   ho
+    */
+
+    int height_new = al->width * height_orig / width_orig;
+    if (height_new > al->height)
+        height_new = al->height;
+    int width_new = height_new * width_orig / height_orig;
+
+
+    GdkPixbuf *pixbuf = gdk_pixbuf_scale_simple (
+                                                 artworkcont_pixbuf,
+                                                 width_new,
+                                                 height_new,
+                                                 GDK_INTERP_BILINEAR);
+
+    gtk_image_set_from_pixbuf (GTK_IMAGE(artworkcont), pixbuf);
 
 }

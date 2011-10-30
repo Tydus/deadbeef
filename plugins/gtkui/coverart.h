@@ -51,7 +51,7 @@ void
 artwork_window_update (DB_playItem_t *it);
 
 void
-artwork_window_refresh (GdkPixbuf *pixbuf);
+artwork_window_refresh ();
 
 #endif
 

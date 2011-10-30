@@ -1280,7 +1280,13 @@ on_hpaned2_size_request                (GtkWidget       *widget,
                                         GtkRequisition  *requisition,
                                         gpointer         user_data)
 {
-
+    static gint oldsize=-1;
+    trace("name=%s\n",gtk_widget_get_name (widget));
+    gint currsize=gtk_paned_get_position (GTK_PANED(widget));
+    if (abs(oldsize-currsize)>5){
+        artwork_window_refresh ();
+        oldsize=currsize;
+    }
 }
 
 
