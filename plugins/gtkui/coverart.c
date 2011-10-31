@@ -36,6 +36,7 @@ static GtkWidget *artworkcont=NULL;
 extern DB_artwork_plugin_t *coverart_plugin;
 
 static GdkPixbuf *artworkcont_pixbuf;
+static char artworkcont_pixbuf_fname[1024];
 static uintptr_t artworkcont_pixbuf_mutex;
 
 #define MAX_ID 256
@@ -358,6 +359,18 @@ artwork_window_callback (const char *fname, const char *artist, const char *albu
     if (!image_fname)
         return;
 
+    if (!artworkcont_pixbuf_mutex)
+        artworkcont_pixbuf_mutex = deadbeef->mutex_create ();
+
+    deadbeef->mutex_lock (artworkcont_pixbuf_mutex);
+    trace ("artwork_window_callback: %s -- %s\n",image_fname,artworkcont_pixbuf_fname);
+    if (!strcmp (image_fname, artworkcont_pixbuf_fname)) {
+        trace ("same, return\n");
+        deadbeef->mutex_unlock (artworkcont_pixbuf_mutex);
+        return;
+    }
+    deadbeef->mutex_unlock (artworkcont_pixbuf_mutex);
+
     // Create a tmp pixbuf
     GError *error = NULL;
     GdkPixbuf *tmp_pixbuf = gdk_pixbuf_new_from_file (image_fname, &error);
@@ -366,17 +379,16 @@ artwork_window_callback (const char *fname, const char *artist, const char *albu
         free (image_fname);
         return;
     }
-    free (image_fname);
 
     // And replace the old one
-    
-    if (!artworkcont_pixbuf_mutex)
-        artworkcont_pixbuf_mutex = deadbeef->mutex_create ();
     deadbeef->mutex_lock (artworkcont_pixbuf_mutex);
     if (artworkcont_pixbuf)
         gdk_pixbuf_unref (artworkcont_pixbuf);
     artworkcont_pixbuf = tmp_pixbuf;
+    strncpy (artworkcont_pixbuf_fname,image_fname,1023);
     deadbeef->mutex_unlock (artworkcont_pixbuf_mutex);
+
+    free (image_fname);
 
     artwork_window_refresh ();
 
@@ -400,6 +412,7 @@ artwork_window_update (DB_playItem_t *it) {
     }
 
     const char *fname = deadbeef->pl_find_meta (it, ":URI");
+    trace ("artwork_window_update: %s\n",fname);
 
     if (coverart_plugin->get_album_art (fname, artist, album, -1, artwork_window_callback, NULL))
         artwork_window_callback (fname, artist, album, NULL);
