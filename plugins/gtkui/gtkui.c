@@ -1230,6 +1230,15 @@ void
 gtkui_playlist_set_curr (int playlist) {
     deadbeef->plt_set_curr_idx (playlist);
     deadbeef->conf_set_int ("playlist.current", playlist);
+
+    DdbListviewIter cursor = deadbeef->pl_get_for_idx_and_iter (
+            deadbeef->pl_get_cursor (PL_MAIN), PL_MAIN);
+    if (cursor) {
+        artwork_window_update ((DB_playItem_t *)cursor);
+        deadbeef->pl_item_unref (cursor);
+    }
+
+    artwork_window_refresh ();
 }
 
 static int
