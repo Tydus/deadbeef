@@ -610,7 +610,7 @@ create_mainwin (void)
   gtk_widget_show (vpaned1);
   gtk_paned_pack1 (GTK_PANED (hpaned2), vpaned1, FALSE, TRUE);
 
-  img_art = gtk_image_new_from_icon_name ("gtk-stop", GTK_ICON_SIZE_BUTTON);
+  img_art = create_pixmap (mainwin, NULL);
   gtk_widget_show (img_art);
   gtk_paned_pack2 (GTK_PANED (vpaned1), img_art, FALSE, FALSE);
 
