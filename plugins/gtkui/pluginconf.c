@@ -431,7 +431,7 @@ gtkui_run_dialog (GtkWidget *parentwin, ddb_dialog_t *conf, uint32_t buttons, in
                     break;
                 }
 
-                gtk_combo_box_text_append_text (GTK_COMBO_BOX_TEXT (prop), entry);
+                gtk_combo_box_append_text (GTK_COMBO_BOX (prop), entry);
             }
             if (!script) {
                 break;
