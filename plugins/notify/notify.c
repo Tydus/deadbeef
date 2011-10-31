@@ -34,6 +34,8 @@ DB_artwork_plugin_t *artwork_plugin;
 
 static dbus_uint32_t replaces_id = 0;
 
+static DB_playItem_t *curr_track;
+
 #define NOTIFY_DEFAULT_TITLE "%t"
 #define NOTIFY_DEFAULT_CONTENT "%a - %b"
 
@@ -269,11 +271,18 @@ static void show_notification (DB_playItem_t *track) {
 static int
 on_songstarted (ddb_event_track_t *ev) {
     if (ev->track && deadbeef->conf_get_int ("notify.enable", 0)) {
-        DB_playItem_t *track = ev->track;
-        if (track) {
-            show_notification (track);
+        curr_track = ev->track;
+        if (curr_track) {
+            show_notification (curr_track);
         }
     }
+    return 0;
+}
+
+static int
+on_paused (int playing){
+    if (curr_track && playing)
+        show_notification (curr_track);
     return 0;
 }
 
@@ -282,6 +291,9 @@ notify_message (uint32_t id, uintptr_t ctx, uint32_t p1, uint32_t p2) {
     switch (id) {
     case DB_EV_SONGSTARTED:
         on_songstarted ((ddb_event_track_t *)ctx);
+        break;
+    case DB_EV_PAUSED:
+        on_paused (1-p1);
         break;
     }
     return 0;
@@ -331,7 +343,7 @@ DB_misc_t plugin = {
     .plugin.version_minor = 0,
     .plugin.id = "notify",
     .plugin.name = "OSD Notify",
-    .plugin.descr = "Displays notifications when new track starts.\nRequires dbus and notification daemon to be running.\nNotification daemon should be provided by your desktop environment.\n",
+    .plugin.descr = "Displays notifications when new track starts or resume playing.\nRequires dbus and notification daemon to be running.\nNotification daemon should be provided by your desktop environment.\n",
     .plugin.copyright = 
         "Copyright (C) 2009-2011 Alexey Yakovenko <waker@users.sourceforge.net>\n"
         "\n"
