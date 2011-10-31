@@ -346,18 +346,25 @@ artwork_window_hide (void) {
 void
 artwork_window_callback (const char *fname, const char *artist, const char *album, void *user_data) {
 
-    char *image_fname = coverart_plugin->get_album_art (fname, artist, album, -1, artwork_window_callback, NULL);
+    gchar *image_fname = coverart_plugin->get_album_art (fname, artist, album, -1, artwork_window_callback, NULL);
 
-    if (artworkcont_pixbuf)
-        gdk_pixbuf_unref (artworkcont_pixbuf);
+    if (!image_fname)
+        return;
 
+    // Create a tmp pixbuf
     GError *error = NULL;
-    artworkcont_pixbuf=gdk_pixbuf_new_from_file (image_fname, &error);
-    if (!artworkcont_pixbuf) {
+    GdkPixbuf *tmp_pixbuf = gdk_pixbuf_new_from_file (image_fname, &error);
+    if (!tmp_pixbuf) {
         fprintf (stderr, "gdk_pixbuf_new_from_file on %s failed, error: %s\n", fname, error->message);
+        free (image_fname);
         return;
     }
-    gdk_pixbuf_ref (artworkcont_pixbuf);
+    free (image_fname);
+
+    // And replace the old one
+    if (artworkcont_pixbuf)
+        gdk_pixbuf_unref (artworkcont_pixbuf);
+    artworkcont_pixbuf = tmp_pixbuf;
 
     artwork_window_refresh ();
 
@@ -371,6 +378,9 @@ artwork_window_update (DB_playItem_t *it) {
     if (!it)
         return;
 
+    if (!coverart_plugin)
+        return;
+
     const char *album = deadbeef->pl_find_meta (it, "album");
     const char *artist = deadbeef->pl_find_meta (it, "artist");
     if (!album || !*album) {
@@ -379,8 +389,7 @@ artwork_window_update (DB_playItem_t *it) {
 
     const char *fname = deadbeef->pl_find_meta (it, ":URI");
 
-    if (!coverart_plugin)
-        return;
+    #warning memory may leak here!
 
     if (coverart_plugin->get_album_art (fname, artist, album, -1, artwork_window_callback, NULL))
         artwork_window_callback (fname, artist, album, NULL);
@@ -422,5 +431,7 @@ artwork_window_refresh () {
                                                  GDK_INTERP_BILINEAR);
 
     gtk_image_set_from_pixbuf (GTK_IMAGE(artworkcont), pixbuf);
+
+    gdk_pixbuf_unref (pixbuf);
 
 }
