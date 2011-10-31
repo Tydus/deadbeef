@@ -28,7 +28,7 @@
 #include "support.h"
 #include "gtkui.h"
 
-static GtkWidget *artworkcont;
+static GtkWidget *artworkcont=NULL;
 
 #define trace(...) { fprintf(stderr, __VA_ARGS__); }
 //#define trace(...)
@@ -36,6 +36,7 @@ static GtkWidget *artworkcont;
 extern DB_artwork_plugin_t *coverart_plugin;
 
 static GdkPixbuf *artworkcont_pixbuf;
+static uintptr_t artworkcont_pixbuf_mutex;
 
 #define MAX_ID 256
 #define CACHE_SIZE 20
@@ -352,7 +353,7 @@ artwork_window_hide (void) {
 void
 artwork_window_callback (const char *fname, const char *artist, const char *album, void *user_data) {
 
-    gchar *image_fname = coverart_plugin->get_album_art (fname, artist, album, -1, artwork_window_callback, NULL);
+    gchar *image_fname = coverart_plugin->get_album_art (fname, artist, album, -1, NULL, NULL);
 
     if (!image_fname)
         return;
@@ -368,9 +369,14 @@ artwork_window_callback (const char *fname, const char *artist, const char *albu
     free (image_fname);
 
     // And replace the old one
+    
+    if (!artworkcont_pixbuf_mutex)
+        artworkcont_pixbuf_mutex = deadbeef->mutex_create ();
+    deadbeef->mutex_lock (artworkcont_pixbuf_mutex);
     if (artworkcont_pixbuf)
         gdk_pixbuf_unref (artworkcont_pixbuf);
     artworkcont_pixbuf = tmp_pixbuf;
+    deadbeef->mutex_unlock (artworkcont_pixbuf_mutex);
 
     artwork_window_refresh ();
 
@@ -408,7 +414,6 @@ artwork_window_refresh () {
     if (!artworkcont_pixbuf)
         return;
 
-
     GtkAllocation *al=&(artworkcont->allocation);
 
     // A Hack for initial width
@@ -417,6 +422,8 @@ artwork_window_refresh () {
 
     if (al->width<16 || al->height<16 )
         return;
+
+    deadbeef->mutex_lock (artworkcont_pixbuf_mutex);
 
     int width_orig  = gdk_pixbuf_get_width (artworkcont_pixbuf);
     int height_orig = gdk_pixbuf_get_height (artworkcont_pixbuf);
@@ -432,12 +439,13 @@ artwork_window_refresh () {
         height_new = al->height;
     int width_new = height_new * width_orig / height_orig;
 
-
+    
     GdkPixbuf *pixbuf = gdk_pixbuf_scale_simple (
                                                  artworkcont_pixbuf,
                                                  width_new,
                                                  height_new,
                                                  GDK_INTERP_BILINEAR);
+    deadbeef->mutex_unlock (artworkcont_pixbuf_mutex);
 
     gtk_image_set_from_pixbuf (GTK_IMAGE(artworkcont), pixbuf);
 
