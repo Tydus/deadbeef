@@ -30,8 +30,8 @@
 
 static GtkWidget *artworkcont=NULL;
 
-#define trace(...) { fprintf(stderr, __VA_ARGS__); }
-//#define trace(...)
+//#define trace(...) { fprintf(stderr, __VA_ARGS__); }
+#define trace(...)
 
 extern DB_artwork_plugin_t *coverart_plugin;
 
@@ -330,10 +330,6 @@ artwork_window_show (void) {
     gtk_widget_show (artworkcont);
     deadbeef->conf_set_int ("gtkui.artwork.visible", 1);
     deadbeef->conf_save ();
-    if (firstrun) {
-        gtk_paned_set_position (GTK_PANED (lookup_widget (mainwin, "hpaned2")), 1);
-        firstrun=0;
-    }
 
     gint pos = deadbeef->conf_get_int ("gtkui.hpaned2.pos", 100);
     trace ("pos=%d\n",pos);
