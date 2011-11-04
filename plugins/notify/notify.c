@@ -181,6 +181,9 @@ static time_t request_timer = 0;
 
 static void
 cover_avail_callback (const char *fname, const char *artist, const char *album, void *user_data) {
+    if (!fname) {
+        return;
+    }
     deadbeef->pl_lock ();
     if (last_track && (time (NULL) - request_timer < 4)) {
         show_notification (last_track);
@@ -278,10 +281,23 @@ on_songstarted (ddb_event_track_t *ev) {
 }
 
 static int
+on_paused (uint32_t paused) {
+    if (!paused) {
+        if (last_track) {
+            show_notification (last_track);
+        }
+    }
+    return 0;
+}
+
+static int
 notify_message (uint32_t id, uintptr_t ctx, uint32_t p1, uint32_t p2) {
     switch (id) {
     case DB_EV_SONGSTARTED:
         on_songstarted ((ddb_event_track_t *)ctx);
+        break;
+    case DB_EV_PAUSED:
+        on_paused (p1);
         break;
     }
     return 0;
