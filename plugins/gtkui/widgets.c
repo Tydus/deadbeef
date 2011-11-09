@@ -223,6 +223,19 @@ w_create_from_string (const char *s, ddb_gtkui_widget_t **parent) {
         }
     }
 
+    back = s;
+    s = gettoken (s, t);
+    if (!strcmp (t, "(")) {
+        if (w->load) {
+            s = gettoken (s, t);
+            w->load (w,t);
+            s = gettoken (s, t); // ")"
+        }
+    }
+    else {
+        s = back;
+    }
+
     if (*parent) {
         w_append (*parent, w);
     }
@@ -262,12 +275,23 @@ static char paste_buffer[1000];
 
 static void
 save_widget_to_string (char *str, ddb_gtkui_widget_t *w) {
+    char buffer[MAX_TOKEN];
     strcat (str, w->type);
     strcat (str, "{");
     for (ddb_gtkui_widget_t *c = w->children; c; c = c->next) {
         save_widget_to_string (str, c);
     }
-    strcat (str, "} ");
+    strcat (str, "}");
+    if (w->save) {
+        w->save (w, buffer, MAX_TOKEN);
+        if (strcmp (buffer,"")) {
+            strcat (str, "(");
+            strcat (str, buffer);
+            strcat (str, ")");
+        }
+    }
+    strcat (str, " ");
+
 }
 
 void
@@ -631,6 +655,17 @@ w_splitter_replace (ddb_gtkui_widget_t *cont, ddb_gtkui_widget_t *child, ddb_gtk
     }
 }
 
+void w_splitter_load (struct ddb_gtkui_widget_s *w, const char *str) {
+    int pos;
+    sscanf (str, "%u", &pos);
+    gtk_paned_set_position (GTK_PANED (w->widget), pos);
+}
+
+void w_splitter_save (struct ddb_gtkui_widget_s *w, char *str, int max_len) {
+    int pos = gtk_paned_get_position (GTK_PANED (w->widget));
+    snprintf (str, max_len-1, "%u", pos);
+}
+
 ddb_gtkui_widget_t *
 w_vsplitter_create (void) {
     w_splitter_t *w = malloc (sizeof (w_splitter_t));
@@ -639,6 +674,8 @@ w_vsplitter_create (void) {
     w->base.append = w_container_add;
     w->base.remove = w_container_remove;
     w->base.replace = w_splitter_replace;
+    w->base.load = w_splitter_load;
+    w->base.save = w_splitter_save;
 
     ddb_gtkui_widget_t *ph1, *ph2;
     ph1 = w_create ("placeholder");
@@ -662,6 +699,8 @@ w_hsplitter_create (void) {
     w->base.append = w_container_add;
     w->base.remove = w_container_remove;
     w->base.replace = w_splitter_replace;
+    w->base.save = w_splitter_save;
+    w->base.load = w_splitter_load;
 
     ddb_gtkui_widget_t *ph1, *ph2;
     ph1 = w_create ("placeholder");
@@ -879,6 +918,17 @@ w_tabs_initmenu (struct ddb_gtkui_widget_s *w, GtkWidget *menu) {
             w);
 }
 
+void w_tabs_load (struct ddb_gtkui_widget_s *w, const char *str) {
+    int page;
+    sscanf (str, "%u", &page);
+    gtk_notebook_set_current_page (GTK_NOTEBOOK (w->widget), page);
+}
+
+void w_tabs_save (struct ddb_gtkui_widget_s *w, char *str, int max_len) {
+    int page = gtk_notebook_get_current_page (GTK_NOTEBOOK (w->widget));
+    snprintf (str, max_len-1, "%u", page);
+}
+
 ddb_gtkui_widget_t *
 w_tabs_create (void) {
     w_tabs_t *w = malloc (sizeof (w_tabs_t));
@@ -888,6 +938,8 @@ w_tabs_create (void) {
     w->base.remove = w_container_remove;
     w->base.replace = w_tabs_replace;
     w->base.initmenu = w_tabs_initmenu;
+    w->base.load = w_tabs_load;
+    w->base.save = w_tabs_save;
 
     ddb_gtkui_widget_t *ph1, *ph2, *ph3;
     ph1 = w_create ("placeholder");
