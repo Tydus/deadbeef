@@ -1304,6 +1304,9 @@ gtkui_stop (void) {
         coverart_plugin->plugin.plugin.stop ();
         coverart_plugin = NULL;
     }
+    if (last_it) {
+        deadbeef->pl_item_unref (last_it);
+    }
     trace ("quitting gtk\n");
     g_idle_add (quit_gtk_cb, NULL);
     trace ("waiting for gtk thread to finish\n");

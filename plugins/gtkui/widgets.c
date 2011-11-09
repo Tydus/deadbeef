@@ -1251,6 +1251,9 @@ w_selproperties_create (void) {
 }
 
 ///// cover art display
+
+DB_playItem_t *last_it=NULL;
+
 void
 coverart_avail_callback (void *user_data) {
     w_coverart_t *w = user_data;
@@ -1259,7 +1262,8 @@ coverart_avail_callback (void *user_data) {
 
 static gboolean
 coverart_expose_event (GtkWidget *widget, GdkEventExpose *event, gpointer user_data) {
-    DB_playItem_t *it = deadbeef->streamer_get_playing_track ();
+    //DB_playItem_t *it = deadbeef->streamer_get_playing_track ();
+    DB_playItem_t *it=last_it;
     if (!it) {
         return FALSE;
     }
@@ -1277,7 +1281,7 @@ coverart_expose_event (GtkWidget *widget, GdkEventExpose *event, gpointer user_d
         gdk_draw_pixbuf (widget->window, widget->style->white_gc, pixbuf, 0, 0, widget->allocation.width/2-pw/2, widget->allocation.height/2-ph/2, pw, ph, GDK_RGB_DITHER_NONE, 0, 0);
         g_object_unref (pixbuf);
     }
-    deadbeef->pl_item_unref (it);
+    //deadbeef->pl_item_unref (it);
     return TRUE;
 }
 
@@ -1296,12 +1300,42 @@ coverart_message (ddb_gtkui_widget_t *w, uint32_t id, uintptr_t ctx, uint32_t p1
         {
             ddb_event_track_t *ev = (ddb_event_track_t *)ctx;
             DB_playItem_t *it = deadbeef->streamer_get_playing_track ();
-            if (it == ev->track) {
-                g_idle_add (coverart_redraw_cb, w);
-            }
             if (it) {
+                if (it == ev->track) {
+                    if (last_it) {
+                        deadbeef->pl_item_unref (last_it);
+                    }
+                    last_it = it;
+                    deadbeef->pl_item_ref (last_it);
+                }
+                g_idle_add (coverart_redraw_cb, w);
                 deadbeef->pl_item_unref (it);
             }
+        }
+        break;
+    case DB_EV_SELCHANGED:
+    case DB_EV_PLAYLISTSWITCHED:
+        {
+            ddb_playlist_t *plt = deadbeef->plt_get_curr ();
+            if (!plt) {
+                break;
+            }
+            DB_playItem_t *it = deadbeef->plt_get_item_for_idx (
+                    plt,
+                    deadbeef->plt_get_cursor (plt, PL_MAIN),
+                    PL_MAIN
+                    );
+            if (last_it) {
+                deadbeef->pl_item_unref (last_it);
+                last_it = NULL;
+            }
+            if (it) {
+                last_it = it;
+                deadbeef->pl_item_ref (last_it);
+                deadbeef->pl_item_unref (it);
+            }
+            g_idle_add (coverart_redraw_cb, w);
+            deadbeef->plt_unref (plt);
         }
         break;
     }

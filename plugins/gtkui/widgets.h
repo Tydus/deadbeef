@@ -21,6 +21,8 @@
 
 #include "gtkui_api.h"
 
+extern DB_playItem_t *last_it;
+
 void
 w_init (void);
 
