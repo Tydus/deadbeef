@@ -1316,6 +1316,8 @@ gtkui_stop (void) {
     if (last_it) {
         deadbeef->pl_item_unref (last_it);
     }
+    trace ("save widget data\n");
+    w_save();
     trace ("quitting gtk\n");
     g_idle_add (quit_gtk_cb, NULL);
     trace ("waiting for gtk thread to finish\n");

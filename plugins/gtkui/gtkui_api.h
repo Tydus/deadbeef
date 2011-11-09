@@ -36,6 +36,9 @@ typedef struct ddb_gtkui_widget_s {
     
     uint32_t flags;
 
+    void (*save) (struct ddb_gtkui_widget_s *w, char *str, int max_len);
+    void (*load) (struct ddb_gtkui_widget_s *w, const char *str);
+
     void (*destroy) (struct ddb_gtkui_widget_s *w);
 
     void (*append) (struct ddb_gtkui_widget_s *container, struct ddb_gtkui_widget_s *child);
