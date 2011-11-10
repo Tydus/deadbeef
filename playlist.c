@@ -1467,7 +1467,7 @@ pl_add_files_begin (playlist_t *plt) {
         plt_ref (addfiles_playlist);
     }
     pl_unlock ();
-    trace ("adding to playlist %d (%s)\n", plt, addfiles_playlist->title);
+    trace ("adding to playlist %p (%s)\n", plt, addfiles_playlist->title);
     return 0;
 }
 
@@ -2437,6 +2437,12 @@ pl_load_all (void) {
             if (trk) {
                 pl_item_unref (trk);
             }
+
+            char conf[100];
+            snprintf (conf, sizeof (conf), "playlist.cursor.%d", plt_get_curr_idx ());
+            int cursor = deadbeef->conf_get_int (conf, -1);
+            plt_set_cursor (plt, PL_MAIN, cursor);
+
             plt_unref (plt);
 
             if (!it) {
