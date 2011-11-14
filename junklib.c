@@ -44,6 +44,7 @@ uint16_t sj_to_unicode[] = {
 #include "playlist.h"
 #include "utf8.h"
 #include "plugins.h"
+#include "plugins/artwork/artwork.h"
 
 #define MAX_TEXT_FRAME_SIZE 1024
 #define MAX_CUESHEET_FRAME_SIZE 10000
@@ -1535,6 +1536,85 @@ junk_id3v2_add_text_frame (DB_id3v2_tag_t *tag, const char *frame_id, const char
 }
 
 DB_id3v2_frame_t *
+junk_id3v2_add_apic_frame (DB_id3v2_tag_t *tag, const char *description, const uint8_t *pict, size_t pict_size) {
+    size_t inlen = strlen (description);
+    uint8_t out[2048];
+
+    trace ("junklib: setting id3v2.%d apic frame\n", tag->version[0]);
+
+    int encoding = 0;
+
+    size_t outlen = -1;
+    if (tag->version[0] == 4) {
+        outlen = inlen;
+        memcpy (out, description, inlen);
+        encoding = 3;
+    }
+    else {
+        outlen = junk_iconv (description, inlen, out, sizeof (out), UTF8_STR, "ISO-8859-1");
+        if (outlen == -1) {
+            outlen = junk_iconv (description, inlen, out+2, sizeof (out) - 2, UTF8_STR, "UCS-2LE");
+            if (outlen <= 0) {
+                return NULL;
+            }
+            out[0] = 0xff;
+            out[1] = 0xfe;
+            outlen += 2;
+            trace ("successfully converted to ucs-2le (size=%d, bom: %x %x)\n", outlen, out[0], out[1]);
+            encoding = 1;
+        }
+        else {
+            trace ("successfully converted to iso8859-1 (size=%d)\n", outlen);
+        }
+    }
+
+    char *mime_str = "image/jpeg";
+
+    if (*(uint32_t *)pict == 0x474E5089) { // .PNG header
+        mime_str = "image/png";
+    }
+
+    // make a frame
+    int size = 1                     // text encoding
+             + strlen (mime_str) + 1 // mime
+             + 1                     // picture type
+             + outlen + 1            // description
+             + pict_size             // picture data
+             ;
+    trace ("calculated frame size = %d\n", size);
+    DB_id3v2_frame_t *f = malloc (size + sizeof (DB_id3v2_frame_t));
+    memset (f, 0, sizeof (DB_id3v2_frame_t));
+    strcpy (f->id, "APIC");
+    f->size = size;
+
+    uint8_t *pd = f->data;
+    *pd++ = encoding;
+    memcpy (pd, mime_str, strlen (mime_str) + 1);
+    pd += strlen (mime_str) + 1;
+    *pd++ = 0x03; // Cover (front)
+    memcpy (pd, out, outlen);
+    pd += outlen;
+    *pd++ = '\0';
+    memcpy (pd, pict, pict_size);
+
+    // append to tag
+    DB_id3v2_frame_t *tail = NULL;
+
+    for (tail = tag->frames; tail && tail->next; tail = tail->next);
+
+    if (tail) {
+        tail->next = f;
+    }
+    else {
+        tag->frames = f;
+    }
+    tail = f;
+
+    return tail;
+}
+
+
+DB_id3v2_frame_t *
 junk_id3v2_add_comment_frame (DB_id3v2_tag_t *tag, const char *lang, const char *descr, const char *value) {
     trace ("junklib: setting 2.3 COMM frame lang=%s, descr='%s', data='%s'\n", lang, descr, value);
 
@@ -2430,6 +2510,44 @@ junk_apev2_add_text_frame (DB_apev2_tag_t *tag, const char *frame_id, const char
     strcpy (f->key, frame_id);
     f->size = size;
     memcpy (f->data, value, size);
+
+    if (tail) {
+        tail->next = f;
+    }
+    else {
+        tag->frames = f;
+    }
+    tail = f;
+    return tail;
+}
+
+DB_apev2_frame_t *
+junk_apev2_add_apic_frame (DB_apev2_tag_t *tag, const char *frame_id, const uint8_t *value, size_t size) {
+    trace ("adding apev2 frame %s %s\n", frame_id, value);
+    if (!*value) {
+        return NULL;
+    }
+    DB_apev2_frame_t *tail = tag->frames;
+    while (tail && tail->next) {
+        tail = tail->next;
+    }
+    char *fname = "cover.jpg";
+    if (*(uint32_t *)value == 0x474E5089) { // .PNG header
+        fname = "cover.png";
+    }
+    size_t len_fname = strlen (fname) + 1;
+
+    DB_apev2_frame_t *f = malloc (sizeof (DB_apev2_frame_t) + len_fname + size);
+    if (!f) {
+        trace ("junk_apev2_add_apic_frame: failed to allocate\n");
+        return NULL;
+    }
+    memset (f, 0, sizeof (DB_apev2_frame_t));
+    f->flags = 2; // Binary
+    strcpy (f->key, frame_id);
+    f->size = len_fname + size;
+    memcpy (f->data, fname, len_fname);
+    memcpy (f->data + len_fname, value, size);
 
     if (tail) {
         tail->next = f;
@@ -3481,6 +3599,57 @@ junk_rewrite_tags (playItem_t *it, uint32_t junk_flags, int id3v2_version, const
     memset (&id3v2, 0, sizeof (id3v2));
     memset (&apev2, 0, sizeof (apev2));
 
+    size_t coverart_length = -1;
+    uint8_t *coverart_data = NULL;
+
+    // Find out cover art
+    DB_artwork_plugin_t *coverart_plugin = NULL;
+    DB_plugin_t **plugins = deadbeef->plug_get_list ();
+    for (int i = 0; plugins[i]; i++) {
+        DB_plugin_t *p = plugins[i];
+        if (p->id && !strcmp (p->id, "artwork")) {
+            coverart_plugin = (DB_artwork_plugin_t *)p;
+            break;
+        }
+    }
+    if (coverart_plugin) {
+        deadbeef->pl_lock ();
+        DB_playItem_t *it_get = (DB_playItem_t *) it;
+        const char *album = deadbeef->pl_find_meta (it_get, "album");
+        const char *artist = deadbeef->pl_find_meta (it_get, "artist");
+        if (!album || !*album) {
+            album = deadbeef->pl_find_meta (it_get, "title");
+        }
+        const char *fname = deadbeef->pl_find_meta (it_get, ":URI");
+        deadbeef->pl_unlock ();
+
+        char *image_fname = coverart_plugin->get_album_art_sync (fname, artist, album, -1);
+        if (image_fname && strcmp (image_fname, coverart_plugin->get_default_cover())) {
+            // Read file
+            DB_FILE *fp = deadbeef->fopen (image_fname);
+            if (!fp) {
+                fprintf (stderr, "junk: cannot open coverart %s\n", image_fname);
+                goto error2;
+            }
+
+            coverart_length = deadbeef->fgetlength (fp);
+            uint8_t *coverart_data_tmp = malloc (coverart_length);
+            if (!coverart_data_tmp) {
+                fprintf (stderr, "junk: cannot allocate memory of %lu bytes\n", coverart_length);
+                goto error2;
+            }
+            if (!deadbeef->fread (coverart_data_tmp, coverart_length, 1, fp)) {
+                fprintf (stderr, "junk: cannot read from %s\n",image_fname);
+                goto error2;
+            }
+            coverart_data = coverart_data_tmp;
+error2:
+            if (fp) {
+                deadbeef->fclose (fp);
+            }
+        }
+    }
+
     if (!strip_id3v2 && !write_id3v2 && id3v2_size > 0) {
         if (deadbeef->fseek (fp, id3v2_start, SEEK_SET) == -1) {
             trace ("cmp3_write_metadata: failed to seek to original id3v2 tag position in %s\n", pl_find_meta (it, ":URI"));
@@ -3602,10 +3771,16 @@ junk_rewrite_tags (playItem_t *it, uint32_t junk_flags, int id3v2_version, const
             junk_id3v2_add_text_frame (&id3v2, "TRCK", track);
         }
 
+
+        // Add Coverart if available
+        if (coverart_data != NULL){
+            junk_id3v2_add_apic_frame (&id3v2, "cover", coverart_data, coverart_length);
+        }
+
         // write tag
         if (junk_id3v2_write (out, &id3v2) != 0) {
             trace ("cmp3_write_metadata: failed to write id3v2 tag to %s\n", pl_find_meta (it, ":URI"))
-            goto error;
+                goto error;
         }
     }
 
@@ -3706,10 +3881,15 @@ junk_rewrite_tags (playItem_t *it, uint32_t junk_flags, int id3v2_version, const
             junk_apev2_add_text_frame (&apev2, "Track", track);
         }
 
+        // Add Coverart if available
+        if (coverart_data != NULL){
+            junk_apev2_add_apic_frame (&apev2, "cover art (front)", coverart_data, coverart_length);
+        }
+
         // write tag
         if (deadbeef->junk_apev2_write (out, &apev2, 0, 1) != 0) {
             trace ("cmp3_write_metadata: failed to write apev2 tag to %s\n", pl_find_meta (it, ":URI"))
-            goto error;
+                goto error;
         }
     }
 
@@ -3733,7 +3913,7 @@ junk_rewrite_tags (playItem_t *it, uint32_t junk_flags, int id3v2_version, const
         trace ("writing new id3v1 tag\n");
         if (junk_id3v1_write (out, it, id3v1_encoding) != 0) {
             trace ("cmp3_write_metadata: failed to write id3v1 tag to %s\n", pl_find_meta (it, ":URI"))
-            goto error;
+                goto error;
         }
     }
 
@@ -3775,6 +3955,9 @@ error:
     }
     else {
         unlink (tmppath);
+    }
+    if (coverart_data) {
+        free (coverart_data);
     }
     return err;
 }
