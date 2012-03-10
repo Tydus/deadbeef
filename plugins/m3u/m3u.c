@@ -19,7 +19,7 @@
 
 #include <string.h>
 #include <stdlib.h>
-#include <math.h>
+#include <math.h> // for ceil
 #include "../../deadbeef.h"
 
 //#define trace(...) { fprintf(stderr, __VA_ARGS__); }
@@ -94,7 +94,18 @@ load_m3u (ddb_playlist_t *plt, DB_playItem_t *after, const char *fname, int *pab
                     uint8_t nm[n+1];
                     memcpy (nm, p, n);
                     nm[n] = 0;
-                    sscanf (nm, "%d,%1000s - %1000s", &length, artist, title);
+                    length = atoi (nm);
+                    char *c = nm;
+                    while (*c && *c != ',') {
+                        c++;
+                    }
+                    if (*c == ',') {
+                        c++;
+                        if (2 != sscanf (c, "%1000s - %1000s", artist, title)) {
+                            strncpy (artist, c, sizeof (artist)-1);
+                            artist[sizeof(artist)-1] = 0;
+                        }
+                    }
                 }
             }
             while (p < end && *p >= 0x20) {
@@ -114,21 +125,42 @@ load_m3u (ddb_playlist_t *plt, DB_playItem_t *after, const char *fname, int *pab
         memcpy (nm, p, n);
         nm[n] = 0;
 
+        if (title[0]) {
+            const char *cs = deadbeef->junk_detect_charset (title);
+            if (cs) {
+                char tmp[2048];
+                if (deadbeef->junk_iconv (title, strlen (title), tmp, sizeof (tmp), cs, "utf-8") >= 0) {
+                    strcpy (title, tmp);
+                }
+            }
+        }
+        if (artist[0]) {
+            const char *cs = deadbeef->junk_detect_charset (artist);
+            if (cs) {
+                char tmp[2048];
+                if (deadbeef->junk_iconv (artist, strlen (artist), tmp, sizeof (tmp), cs, "utf-8") >= 0) {
+                    strcpy (artist, tmp);
+                }
+            }
+        }
+
         DB_playItem_t *it = NULL;
         if (strrchr (nm, '/')) {
             trace ("pl_insert_m3u: adding file %s\n", nm);
             it = deadbeef->plt_insert_file (plt, after, nm, pabort, cb, user_data);
-            if (length >= 0) {
-                deadbeef->plt_set_item_duration (plt, it, length);
-            }
-            if (title[0]) {
-                deadbeef->pl_replace_meta (it, "title", title);
-            }
-            else if (artist[0]) {
-                deadbeef->pl_replace_meta (it, "title", " ");
-            }
-            if (artist[0]) {
-                deadbeef->pl_replace_meta (it, "artist", artist);
+            if (it) {
+                if (length >= 0) {
+                    deadbeef->plt_set_item_duration (plt, it, length);
+                }
+                if (title[0]) {
+                    deadbeef->pl_replace_meta (it, "title", title);
+                }
+                else if (artist[0]) {
+                    deadbeef->pl_replace_meta (it, "title", " ");
+                }
+                if (artist[0]) {
+                    deadbeef->pl_replace_meta (it, "artist", artist);
+                }
             }
         }
         else {
@@ -179,11 +211,13 @@ pls_insert_file (ddb_playlist_t *plt, DB_playItem_t *after, const char *fname, c
         trace ("pls_insert_file: adding file %s\n", fullpath);
         it = deadbeef->plt_insert_file (plt, after, fullpath, pabort, cb, user_data);
     }
-    if (length[0]) {
-        deadbeef->plt_set_item_duration (plt, it, atoi (length));
-    }
-    if (title[0]) {
-        deadbeef->pl_replace_meta (it, "title", title);
+    if (it) {
+        if (length[0]) {
+            deadbeef->plt_set_item_duration (plt, it, atoi (length));
+        }
+        if (title[0]) {
+            deadbeef->pl_replace_meta (it, "title", title);
+        }
     }
     return it;
 }

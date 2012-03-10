@@ -196,7 +196,7 @@ sndfile_init (DB_fileinfo_t *_info, DB_playItem_t *it) {
     default:
         info->read_as_short = 1;
         _info->fmt.bps = 16;
-        fprintf (stderr, "[sndfile] unidentified input format: 0x%X\n", inf.format&0x000f);
+        trace ("[sndfile] unidentified input format: 0x%X\n", inf.format&0x000f);
         break;
     }
 
@@ -325,7 +325,7 @@ sndfile_insert (ddb_playlist_t *plt, DB_playItem_t *after, const char *fname) {
     trace ("calling sf_open_virtual\n");
     info.ctx = sf_open_virtual (&vfs, SFM_READ, &inf, &info);
     if (!info.ctx) {
-        trace ("sndfile: sf_open failed");
+        trace ("sndfile: sf_open failed\n");
         deadbeef->fclose (info.file);
         return NULL;
     }

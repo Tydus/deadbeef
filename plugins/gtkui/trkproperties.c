@@ -491,6 +491,8 @@ write_finished_cb (void *ctx) {
     main_refresh ();
     search_refresh ();
     trkproperties_modified = 0;
+    show_track_properties_dlg ();
+
     return FALSE;
 }
 
@@ -501,6 +503,7 @@ set_progress_cb (void *ctx) {
     const char *fname = deadbeef->pl_find_meta_raw (track, ":URI");
     gtk_entry_set_text (GTK_ENTRY (progressitem), fname);
     deadbeef->pl_item_unref (track);
+    return FALSE;
 }
 
 static void

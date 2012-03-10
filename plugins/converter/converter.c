@@ -149,6 +149,10 @@ encoder_preset_load (const char *fname) {
 // @return -1 on path/write error, -2 if file already exists
 int
 encoder_preset_save (ddb_encoder_preset_t *p, int overwrite) {
+    if (!p->title || !p->title[0]) {
+        fprintf (stderr, "encoder_preset_save: empty title\n");
+        return -1;
+    }
     const char *confdir = deadbeef->get_config_dir ();
     char path[1024];
     if (snprintf (path, sizeof (path), "%s/presets", confdir) < 0) {
@@ -349,6 +353,10 @@ dsp_preset_load (const char *fname) {
 
 int
 dsp_preset_save (ddb_dsp_preset_t *p, int overwrite) {
+    if (!p->title || !p->title[0]) {
+        fprintf (stderr, "dsp_preset_save: empty title\n");
+        return -1;
+    }
     const char *confdir = deadbeef->get_config_dir ();
     char path[1024];
     if (snprintf (path, sizeof (path), "%s/presets", confdir) < 0) {
@@ -731,7 +739,8 @@ convert (DB_playItem_t *it, const char *outfolder, const char *outfile, int outp
         return -1;
     }
 
-    if (!check_dir (outfolder, 0755)) {
+    char *path = outfolder[0] ? strdupa (outfolder) : strdupa (getenv("HOME"));
+    if (!check_dir (path, 0755)) {
         fprintf (stderr, "converter: failed to create output folder: %s\n", outfolder);
         return -1;
     }

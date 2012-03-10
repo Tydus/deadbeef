@@ -175,4 +175,6 @@ gtkui_trackinfochanged (DB_playItem_t *it);
 gboolean
 redraw_queued_tracks_cb (gpointer plt);
 
+extern DB_playItem_t * (*gtkui_original_plt_load) (ddb_playlist_t *plt, DB_playItem_t *after, const char *fname, int *pabort, int (*cb)(DB_playItem_t *it, void *data), void *user_data);
+
 #endif

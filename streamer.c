@@ -145,6 +145,7 @@ streamer_unlock (void) {
 static void
 streamer_abort_files (void) {
     trace ("\033[0;33mstreamer_abort_files\033[37;0m\n");
+    mutex_lock (decodemutex);
     if (fileinfo && fileinfo->file) {
         deadbeef->fabort (fileinfo->file);
     }
@@ -154,6 +155,7 @@ streamer_abort_files (void) {
     if (streamer_file) {
         deadbeef->fabort (streamer_file);
     }
+    mutex_unlock (decodemutex);
 }
 
 
@@ -711,11 +713,15 @@ streamer_set_current (playItem_t *it) {
         const char *plug = NULL;
         trace ("\033[0;34mgetting content-type\033[37;0m\n");
         if (!fp) {
+            err = -1;
             goto error;
         }
         const char *ct = vfs_get_content_type (fp);
         if (!ct) {
             vfs_fclose (fp);
+            fp = NULL;
+            streamer_file = NULL;
+            err = -1;
             goto error;
         }
         trace ("got content-type: %s\n", ct);
@@ -889,12 +895,16 @@ m3u_error:
         }
         if (dec) {
             trace ("\033[0;33minit decoder for %s (%s)\033[37;0m\n", pl_find_meta (it, ":URI"), decoder_id);
+            mutex_lock (decodemutex);
             new_fileinfo = dec->open (0);
+            mutex_unlock (decodemutex);
             if (new_fileinfo && dec->init (new_fileinfo, DB_PLAYITEM (it)) != 0) {
-                trace ("\033[0;31mfailed to init decoder\033[37;0m\n")
+                trace ("\033[0;31mfailed to init decoder\033[37;0m\n");
+                mutex_lock (decodemutex);
                 dec->free (new_fileinfo);
                 new_fileinfo = NULL;
-                goto error;
+                mutex_unlock (decodemutex);
+//                goto error;
             }
         }
 
@@ -941,11 +951,11 @@ m3u_error:
     }
 success:
     mutex_lock (decodemutex);
+    if (fileinfo) {
+        fileinfo->plugin->free (fileinfo);
+        fileinfo = NULL;
+    }
     if (new_fileinfo) {
-        if (fileinfo) {
-            fileinfo->plugin->free (fileinfo);
-            fileinfo = NULL;
-        }
         fileinfo = new_fileinfo;
         new_fileinfo = NULL;
     }
@@ -1246,45 +1256,6 @@ streamer_thread (void *ctx) {
                 memcpy (&orig_output_format, &fileinfo->fmt, sizeof (ddb_waveformat_t));
                 memcpy (&output_format, &fileinfo->fmt, sizeof (ddb_waveformat_t));
                 formatchanged = 1;
-#if 0
-            // FIXME: this breaks gapless playback if output sampletate was
-            // changed by dsp plugin
-                memcpy (&output_format, &fileinfo->fmt, sizeof (ddb_waveformat_t));
-                streamer_unlock (); // prevent race-condition in output plugins
-                output->setformat (&fileinfo->fmt);
-                streamer_lock ();
-                // check if the format actually changed
-                if (memcmp (&output->fmt, &prevfmt, sizeof (ddb_waveformat_t))) {
-                    // restart streaming of current track
-                    trace ("streamer: output samplerate changed from %d to %d; restarting track\n", prevfmt.samplerate, output->fmt.samplerate);
-                    mutex_lock (decodemutex);
-                    fileinfo->plugin->free (fileinfo);
-                    fileinfo = NULL;
-                    DB_decoder_t *dec = NULL;
-                    dec = plug_get_decoder_for_id (streaming_track->decoder_id);
-                    if (dec) {
-                        fileinfo = dec->open (0);
-                        if (fileinfo && dec->init (fileinfo, DB_PLAYITEM (streaming_track)) < 0) {
-                            dec->free (fileinfo);
-                            fileinfo = NULL;
-                        }
-                    }
-                    if (!dec || !fileinfo) {
-                        // FIXME: handle error
-                    }
-                    mutex_unlock (decodemutex);
-                    bytes_until_next_song = -1;
-                    streamer_buffering = 1;
-                    streamer_reset (1);
-                    if (output->state () != OUTPUT_STATE_PLAYING) {
-                        if (0 != output->play ()) {
-                            memset (&output_format, 0, sizeof (output_format));
-                            fprintf (stderr, "streamer: failed to start playback (track transition format change)\n");
-                            streamer_set_nextsong (-2, 0);
-                        }
-                    }
-                }
-#endif
             }
             streamer_unlock ();
         }
@@ -1329,12 +1300,17 @@ streamer_thread (void *ctx) {
                 pl_unlock ();
                 if (dec) {
                     fileinfo = dec->open (0);
+                    mutex_unlock (decodemutex);
                     if (fileinfo && dec->init (fileinfo, DB_PLAYITEM (streaming_track)) != 0) {
+                        mutex_lock (decodemutex);
                         dec->free (fileinfo);
                         fileinfo = NULL;
+                        mutex_unlock (decodemutex);
                     }
                 }
-                mutex_unlock (decodemutex);
+                else {
+                    mutex_unlock (decodemutex);
+                }
 
                 if (!dec || !fileinfo) {
                     if (streaming_track) {
@@ -1665,7 +1641,7 @@ streamer_dsp_init (void) {
         DB_dsp_t *src = (DB_dsp_t *)plug_get_for_id ("SRC");
         if (src) {
             ddb_dsp_context_t *inst = src->open ();
-            inst->enabled = 0;
+            inst->enabled = 1;
             src->set_param (inst, 0, "48000"); // samplerate
             src->set_param (inst, 1, "2"); // quality=SINC_FASTEST
             src->set_param (inst, 2, "1"); // auto
@@ -1804,6 +1780,7 @@ streamer_set_output_format (void) {
             return -1;
         }
     }
+    return 0;
 }
 
 // decodes data and converts to current output format

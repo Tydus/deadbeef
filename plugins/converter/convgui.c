@@ -690,11 +690,9 @@ on_encoder_preset_add                     (GtkButton       *button,
     current_ctx->current_encoder_preset = converter_plugin->encoder_preset_alloc ();
 
     if (GTK_RESPONSE_OK == edit_encoder_preset (_("Add new encoder"), toplevel, 0)) {
-        printf ("added new enc preset\n");
         converter_plugin->encoder_preset_append (current_ctx->current_encoder_preset);
         GtkComboBox *combo = GTK_COMBO_BOX (lookup_widget (current_ctx->converter, "encoder"));
         GtkWidget *list = lookup_widget (toplevel, "presets");
-        printf ("refresh list\n");
         refresh_encoder_lists (combo, GTK_TREE_VIEW (list));
     }
 
@@ -1253,7 +1251,7 @@ static DB_plugin_action_t convert_action = {
     .title = "Convert",
     .name = "convert",
     .flags = DB_ACTION_CAN_MULTIPLE_TRACKS | DB_ACTION_ALLOW_MULTIPLE_TRACKS | DB_ACTION_SINGLE_TRACK,
-    .callback = converter_show,
+    .callback = DDB_ACTION_CALLBACK(converter_show),
     .next = NULL
 };
 

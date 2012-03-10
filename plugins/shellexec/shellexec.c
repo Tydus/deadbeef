@@ -121,6 +121,20 @@ shx_get_actions (DB_playItem_t *it)
     return (DB_plugin_action_t *)actions;
 }
 
+static char *
+shx_find_sep (char *str) {
+    while (*str && *str != ':') {
+        if (*str == '"') {
+            str++;
+            while (*str && *str !='"') {
+                str++;
+            }
+        }
+        str++;
+    }
+    return str;
+}
+
 static int
 shx_start ()
 {
@@ -141,7 +155,7 @@ shx_start ()
         int idx = 0;
         char *p = tmp;
         while (idx < 4 && p) {
-            char *e = strchr (p, ':');
+            char *e = shx_find_sep (p);
             args[idx++] = p;
             if (!e) {
                 break;
@@ -189,6 +203,9 @@ shx_start ()
 
         if (0 == strstr (flags, "single"))
             action->parent.flags |= DB_ACTION_ALLOW_MULTIPLE_TRACKS;
+
+        if (strstr (flags, "playlist"))
+            action->parent.flags |= DB_ACTION_PLAYLIST;
 
         if (prev)
             prev->parent.next = (DB_plugin_action_t *)action;

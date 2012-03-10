@@ -318,7 +318,30 @@ fail:
 
 static int
 lfm_fetch_song_info (DB_playItem_t *song, const char **a, const char **t, const char **b, float *l, const char **n, const char **m) {
-    *a = deadbeef->pl_find_meta (song, "artist");
+    if (deadbeef->conf_get_int ("lastfm.prefer_album_artist", 0)) {
+        *a = deadbeef->pl_find_meta (song, "band");
+        if (!(*a)) {
+            *a = deadbeef->pl_find_meta (song, "album artist");
+        }
+        if (!(*a)) {
+            *a = deadbeef->pl_find_meta (song, "albumartist");
+        }
+        if (!(*a)) {
+            *a = deadbeef->pl_find_meta (song, "artist");
+        }
+    }
+    else {
+        *a = deadbeef->pl_find_meta (song, "artist");
+        if (!(*a)) {
+            *a = deadbeef->pl_find_meta (song, "band");
+        }
+        if (!(*a)) {
+            *a = deadbeef->pl_find_meta (song, "album artist");
+        }
+        if (!(*a)) {
+            *a = deadbeef->pl_find_meta (song, "albumartist");
+        }
+    }
     if (!*a) {
         return -1;
     }
@@ -822,10 +845,9 @@ lfm_message (uint32_t id, uintptr_t ctx, uint32_t p1, uint32_t p2) {
 
 static int
 lastfm_start (void) {
-    lfm_sess[0] = 0;
-    lfm_mutex = 0;
-    lfm_cond = 9;
-    lfm_tid = 0;
+    if (lfm_mutex) {
+        return -1;
+    }
     lfm_stopthread = 0;
     lfm_mutex = deadbeef->mutex_create_nonrecursive ();
     lfm_cond = deadbeef->cond_create ();
@@ -886,7 +908,7 @@ static DB_plugin_action_t love_action = {
     .title = "Love at Last.fm",
     .name = "lfm_love",
     .flags = DB_ACTION_SINGLE_TRACK,
-    .callback = lfm_action_love,
+    .callback = DDB_ACTION_CALLBACK(lfm_action_love),
     .next = NULL
 };
 
@@ -894,7 +916,7 @@ static DB_plugin_action_t lookup_action = {
     .title = "Lookup on Last.fm",
     .name = "lfm_lookup",
     .flags = DB_ACTION_SINGLE_TRACK,
-    .callback = lfm_action_lookup,
+    .callback = DDB_ACTION_CALLBACK (lfm_action_lookup),
     .next = NULL// &love_action
 };
 
@@ -922,6 +944,7 @@ static const char settings_dlg[] =
     "property Username entry lastfm.login \"\";\n"
     "property Password password lastfm.password \"\";"
     "property \"Scrobble URL\" entry lastfm.scrobbler_url \""SCROBBLER_URL_LFM"\";"
+    "property \"Prefer Album Artist over Artist field\" checkbox lastfm.prefer_album_artist 0;"
 ;
 
 // define plugin interface
@@ -933,7 +956,7 @@ static DB_misc_t plugin = {
     .plugin.type = DB_PLUGIN_MISC,
     .plugin.name = "last.fm scrobbler",
     .plugin.descr = "Sends played songs information to your last.fm account, or other service that use AudioScrobbler protocol",
-    .plugin.copyright = 
+    .plugin.copyright =
         "Copyright (C) 2009-2011 Alexey Yakovenko <waker@users.sourceforge.net>\n"
         "\n"
         "This program is free software; you can redistribute it and/or\n"

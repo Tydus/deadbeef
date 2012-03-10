@@ -711,7 +711,8 @@ convstr_id3v2 (int version, uint8_t encoding, const unsigned char* str, int sz) 
             }
             else {
                 trace ("invalid ucs-2 signature %x %x\n", (int)str[0], (int)str[1]);
-                return NULL;
+                enc = "UCS-2LE";
+                // NOTE: this is an assumption, might break in the future.
             }
         }
         else {
@@ -1129,6 +1130,7 @@ junk_apev2_add_frame (playItem_t *it, DB_apev2_tag_t *tag_store, DB_apev2_frame_
             }
         }
     }
+    return 0;
 }
 
 int
